@@ -94,16 +94,25 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
         log.info("Initialize the entity service {} for entity {}/{}", serviceClass, entityClass, entityName);
 
         try {
-            loadEntityGraph = (EntityGraph<? super T>) em.getEntityGraph(entityName + AbstractPersistent.ENTITY_GRAPH_LOAD_BY_GUID);
+            loadEntityGraph = (EntityGraph<? super T>) getEntityManager().getEntityGraph(entityName + AbstractPersistent.ENTITY_GRAPH_LOAD_BY_GUID);
         } catch (IllegalArgumentException ex) {
             log.warn("The entity graph '{}{}' is not defined for the entity {}/{}", entityName, AbstractPersistent.ENTITY_GRAPH_LOAD_BY_GUID, entityName, entityClass);
         }
         try {
-            loadAllEntityGraph = (EntityGraph<? super T>) em.getEntityGraph(entityName + AbstractPersistent.ENTITY_GRAPH_LOAD_ALL);
+            loadAllEntityGraph = (EntityGraph<? super T>) getEntityManager().getEntityGraph(entityName + AbstractPersistent.ENTITY_GRAPH_LOAD_ALL);
         } catch (IllegalArgumentException ex) {
             log.warn("The entity graph '{}{}' is not defined for the entity {}/{}", entityName, AbstractPersistent.ENTITY_GRAPH_LOAD_ALL, entityName, entityClass);
         }
-        cb = em.getCriteriaBuilder();
+        cb = getEntityManager().getCriteriaBuilder();
+    }
+
+    /**
+     * Gets the entity manager.
+     * 
+     * @return the entity manager.
+     */
+    protected EntityManager getEntityManager() {
+        return em;
     }
 
     /**
@@ -115,10 +124,10 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
     @SuppressWarnings("unchecked")
     protected List<T> findAll() throws ServiceException {
         try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<T> cq = cb.createQuery(entityClass);
             cq.from(entityClass);
-            TypedQuery<T> query = em.createQuery(cq);
+            TypedQuery<T> query = getEntityManager().createQuery(cq);
             return query.getResultList();
         } catch (Exception e) {
             throw new ServiceException(Errors.FIND_ALL_ENTITIES_FAILED, e);
@@ -136,7 +145,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
     @Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
     public T findByGuid(final String guid) throws ServiceException {
         try {
-            return em.find(entityClass, guid);
+            return getEntityManager().find(entityClass, guid);
         } catch (Exception e) {
             throw new ServiceException(Errors.FIND_ENTITY_BY_ID_FAILED, e);
         }
@@ -152,8 +161,8 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = ServiceException.class)
     public T update(T entity) throws ServiceException {
         try {
-            T result = em.merge(entity);
-            em.flush();
+            T result = getEntityManager().merge(entity);
+            getEntityManager().flush();
             return result;
         } catch (Exception e) {
             throw handleConstraint(e, Errors.MERGE_ENTITY_FAILED);
@@ -173,8 +182,8 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
         if (entities != null) {
             try {
                 final List<T> result = new ArrayList<>(entities.size());
-                entities.forEach(e -> result.add(em.merge(e)));
-                em.flush();
+                entities.forEach(e -> result.add(getEntityManager().merge(e)));
+                getEntityManager().flush();
                 return result;
             } catch (Exception e) {
                 throw handleConstraint(e, Errors.MERGE_ENTITY_FAILED);
@@ -193,8 +202,8 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = ServiceException.class)
     public T create(T entity) throws ServiceException {
         try {
-            em.persist(entity);
-            em.flush();
+            getEntityManager().persist(entity);
+            getEntityManager().flush();
         } catch (Exception e) {
             throw handleConstraint(e, Errors.PERSIST_ENTITY_FAILED);
         }
@@ -213,7 +222,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
         if (entities != null) {
             try {
                 entities.forEach(em::persist);
-                em.flush();
+                getEntityManager().flush();
             } catch (Exception e) {
                 throw handleConstraint(e, Errors.PERSIST_ENTITY_FAILED);
             }
@@ -227,7 +236,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @param entity the entity.
      */
     protected void refresh(T entity) {
-        em.refresh(entity);
+        getEntityManager().refresh(entity);
     }
 
     /**
@@ -241,8 +250,8 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
     public boolean delete(T entity) throws ServiceException {
         try {
             if (entity != null) {
-                em.remove(entity);
-                em.flush();
+                getEntityManager().remove(entity);
+                getEntityManager().flush();
                 return true;
             }
             return false;
@@ -263,8 +272,8 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
     public boolean deleteAll(List<T> entities) throws ServiceException {
         try {
             if (entities != null && !entities.isEmpty()) {
-                entities.forEach(e -> em.remove(e));
-                em.flush();
+                entities.forEach(e -> getEntityManager().remove(e));
+                getEntityManager().flush();
                 return true;
             }
             return false;
@@ -281,7 +290,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @return the query.
      */
     protected Query createNamedQuery(String namedQuery, Map<String, Object> parameters) {
-        Query query = em.createNamedQuery(namedQuery);
+        Query query = getEntityManager().createNamedQuery(namedQuery);
         if (parameters != null && !parameters.isEmpty()) {
             parameters.forEach(query::setParameter);
         }
@@ -295,7 +304,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @param lockMode the lock mode
      */
     protected void lock(T entity, LockModeType lockMode) {
-        em.lock(entity, lockMode);
+        getEntityManager().lock(entity, lockMode);
     }
 
     /**
@@ -312,7 +321,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
             try {
                 CriteriaQuery<T> cq = criteriaQuery();
                 cq.where(cq.from(entityClass).get(AbstractPersistent_.GUID).in(guids));
-                result = em.createQuery(cq).getResultList();
+                result = getEntityManager().createQuery(cq).getResultList();
             } catch (Exception e) {
                 throw new ServiceException(Errors.FAILED_TO_GET_ENTITY_BY_GUIDS, e, entityName);
             }
@@ -378,7 +387,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
         try {
             CriteriaQuery<T> cq = criteriaQuery();
             cq.from(entityClass);
-            TypedQuery<T> query = em.createQuery(cq);
+            TypedQuery<T> query = getEntityManager().createQuery(cq);
             if (from != null) {
                 query.setFirstResult(from);
             }
@@ -406,8 +415,8 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
         try {
             CriteriaQuery<T> cq = criteriaQuery();
             cq.from(entityClass);
-            int result = em.createQuery(cq).executeUpdate();
-            em.flush();
+            int result = getEntityManager().createQuery(cq).executeUpdate();
+            getEntityManager().flush();
             return result;
         } catch (Exception e) {
             throw handleConstraint(e, Errors.FAILED_TO_DELETE_ALL_QUERY);
@@ -427,11 +436,11 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
             try {
                 CriteriaDelete<T> cq = deleteQuery();
                 cq.where(
-                        em.getCriteriaBuilder()
+                        getEntityManager().getCriteriaBuilder()
                                 .equal(cq.from(entityClass).get(AbstractPersistent_.GUID), guid)
                 );
-                int count = em.createQuery(cq).executeUpdate();
-                em.flush();
+                int count = getEntityManager().createQuery(cq).executeUpdate();
+                getEntityManager().flush();
                 return count == 1;
             } catch (Exception e) {
                 throw handleConstraint(e, Errors.FAILED_TO_DELETE_BY_GUID_QUERY);
@@ -453,8 +462,8 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
             if (guids != null && !guids.isEmpty()) {
                 CriteriaDelete<T> cq = deleteQuery();
                 cq.where(cq.from(entityClass).get(AbstractPersistent_.GUID).in(guids));
-                int result = em.createQuery(cq).executeUpdate();
-                em.flush();
+                int result = getEntityManager().createQuery(cq).executeUpdate();
+                getEntityManager().flush();
                 return result;
             }
         } catch (Exception e) {
@@ -486,7 +495,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
             CriteriaQuery<T> cq = criteriaQuery();
             cq.from(entityClass);
             cq.distinct(true);
-            TypedQuery<T> query = em.createQuery(cq);
+            TypedQuery<T> query = getEntityManager().createQuery(cq);
             if (entityGraph != null) {
                 query.setHint(HINT_LOAD_GRAPH, entityGraph);
             }
@@ -522,7 +531,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
             if (guids != null && !guids.isEmpty()) {
                 CriteriaQuery<T> cq = criteriaQuery();
                 cq.where(cq.from(entityClass).get(AbstractPersistent_.GUID).in(guids));
-                TypedQuery<T> query = em.createQuery(cq);
+                TypedQuery<T> query = getEntityManager().createQuery(cq);
                 if (entityGraph != null) {
                     query.setHint(HINT_LOAD_GRAPH, entityGraph);
                 }
@@ -561,7 +570,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
                 if (entityGraph != null) {
                     properties.put(HINT_LOAD_GRAPH, entityGraph);
                 }
-                return em.find(entityClass, guid, properties);
+                return getEntityManager().find(entityClass, guid, properties);
             } catch (Exception e) {
                 throw new ServiceException(Errors.FAILED_TO_LOAD_ENTITY_BY_GUID, e, entityName, guid, entityGraph == null ? null : entityGraph.getName());
             }
@@ -610,7 +619,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @return the criteria query.
      */
     protected CriteriaQuery<T> criteriaQuery() {
-        return this.em.getCriteriaBuilder().createQuery(this.entityClass);
+        return this.getEntityManager().getCriteriaBuilder().createQuery(this.entityClass);
     }
 
     /**
@@ -618,7 +627,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @return the delete query.
      */
     protected CriteriaDelete<T> deleteQuery() {
-        return em.getCriteriaBuilder().createCriteriaDelete(entityClass);
+        return getEntityManager().getCriteriaBuilder().createCriteriaDelete(entityClass);
     }
 
     /**
@@ -626,9 +635,151 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @return the update query.
      */
     protected CriteriaUpdate<T> updateQuery() {
-        return em.getCriteriaBuilder().createCriteriaUpdate(entityClass);
+        return getEntityManager().getCriteriaBuilder().createCriteriaUpdate(entityClass);
     }
 
+
+    /**
+     * Wildcard the search string with case insensitive {@code true}.
+     *
+     * @param searchString the search string.
+     * @return the corresponding search string.
+     * @see #wildcard(java.lang.String, boolean)
+     */
+    public static String wildcard(final String searchString) {
+        return wildcard(searchString, true);
+    }
+
+    /**
+     * Wildcard the search string. Replace * to % and ? to _
+     *
+     * @param searchString the search string.
+     * @param caseInsensitive the case insensitive flag.
+     * @return the corresponding search string.
+     */
+    public static String wildcard(final String searchString, final boolean caseInsensitive) {
+        String result = searchString;
+        if (caseInsensitive) {
+            result = result.toLowerCase();
+        }
+        if (searchString.indexOf('*') != -1) {
+            result = result.replace('*', '%');
+        }
+        if (searchString.indexOf('?') != -1) {
+            result = result.replace('?', '_');
+        }
+        return result;
+    }
+
+    /**
+     * Create an IN clause. If the size of the collection exceeds 1000 items, multiple predicates are created and combined with
+     * OR.
+     *
+     * @param path the path of the parameter
+     * @param values the values for the IN clause
+     * @param cb the criteria builder for the OR sub-query
+     * @return the predicate with the IN clause
+     */
+    public static Predicate inClause(Expression<?> path, Collection<?> values, CriteriaBuilder cb) {
+        Predicate result = path.in(values);
+        if (values.size() > 1000) {
+            List<Predicate> predicates = new ArrayList<>();
+            List<?> valuesList = new ArrayList<>(values);
+            while (valuesList.size() > 1000) {
+                List<?> subList = valuesList.subList(0, 1000);
+                predicates.add(path.in(subList));
+                subList.clear();
+            }
+            predicates.add(path.in(valuesList));
+            result = cb.or(predicates.toArray(new Predicate[0]));
+        }
+        return result;
+    }
+
+    /**
+     * Create a NOT IN clause. If the size of the collection exceeds 1000 items, multiple predicates are created and combined
+     * with AND.
+     *
+     * @param path the path of the parameter
+     * @param values the values for the NOT IN clause
+     * @param cb the criteria builder for the AND sub-query
+     * @return the predicate with the NOT IN clause
+     */
+    public static Predicate notInClause(Expression<?> path, Collection<?> values, CriteriaBuilder cb) {
+        Predicate result = cb.not(path.in(values));
+        if (values.size() > 1000) {
+            List<Predicate> predicates = new ArrayList<>();
+            List<?> valuesList = new ArrayList<>(values);
+            while (valuesList.size() > 1000) {
+                List<?> subList = valuesList.subList(0, 1000);
+                predicates.add(cb.not(path.in(subList)));
+                subList.clear();
+            }
+            predicates.add(cb.not(path.in(valuesList)));
+            result = cb.and(predicates.toArray(new Predicate[0]));
+        }
+        return result;
+    }
+
+    /**
+     * Create an IN clause in JPQL. If the size of the collection exceeds 1000 items, multiple queries are created and combined
+     * with OR.
+     *
+     * @param attribute the JPQL attribute
+     * @param attributeName the attribute name for the parameter replacement
+     * @param values the values for the IN clause
+     * @param parameters the parameters to be added from the IN clause
+     * @return the query string with the IN clause
+     */
+    public static String inClause(String attribute, String attributeName, Collection<?> values, Map<String, Object> parameters) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(attribute).append(" IN (:").append(attributeName).append(")");
+        List<?> valuesList = new ArrayList<>(values);
+        if (values.size() > 1000) {
+            int i = 0;
+            while (valuesList.size() > 1000) {
+                List<?> subList = valuesList.subList(0, 1000);
+                sb.append(" OR ").append(attribute).append(" IN (:").append(attributeName).append(i).append(")");
+                parameters.put(attributeName + i, new ArrayList<>(subList));
+                subList.clear();
+                i++;
+            }
+        }
+        sb.append(")");
+        parameters.put(attributeName, valuesList);
+        return sb.toString();
+    }
+
+    /**
+     * Create a NOT IN clause in JPQL. If the size of the collection exceeds 1000 items, multiple queries are created and
+     * combined with AND.
+     *
+     * @param attribute the JPQL attribute
+     * @param attributeName the attribute name for the parameter replacement
+     * @param values the values for the NOT IN clause
+     * @param parameters the parameters to be added from the NOT IN clause
+     * @return the query string with the NOT IN clause
+     */
+    public static String notInClause(String attribute, String attributeName, Collection<?> values, Map<String, Object> parameters) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(attribute).append(" NOT IN (:").append(attributeName).append(")");
+        List<?> valuesList = new ArrayList<>(values);
+        if (values.size() > 1000) {
+            int i = 0;
+            while (valuesList.size() > 1000) {
+                List<?> subList = valuesList.subList(0, 1000);
+                sb.append(" AND ").append(attribute).append(" NOT IN (:").append(attributeName).append(i).append(")");
+                parameters.put(attributeName + i, new ArrayList<>(subList));
+                subList.clear();
+                i++;
+            }
+        }
+        sb.append(")");
+        parameters.put(attributeName, valuesList);
+        return sb.toString();
+    }
+
+    /**
     /**
      * The error keys.
      */
