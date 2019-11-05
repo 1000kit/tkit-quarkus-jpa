@@ -51,6 +51,10 @@ public class ServiceException extends Exception {
         }
     }
 
+    public Enum getMessageKey() {
+        return key;
+    }
+
     public final void addParameter(Object parameter) {
         parameters.add(parameter);
     }
