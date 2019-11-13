@@ -35,6 +35,7 @@ public abstract class AbstractPersistent implements Serializable {
      */
     private static final long serialVersionUID = -8041083748062531412L;
 
+
     /**
      * The entity graph name for the load all method.
      */
