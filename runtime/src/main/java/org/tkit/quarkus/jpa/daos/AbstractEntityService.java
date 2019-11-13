@@ -122,7 +122,8 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @throws ServiceException if the method fails.
      */
     @SuppressWarnings("unchecked")
-    protected List<T> findAll() throws ServiceException {
+	@Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
+    public List<T> findAll() throws ServiceException {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<T> cq = cb.createQuery(entityClass);
