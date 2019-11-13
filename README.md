@@ -1,9 +1,9 @@
-# 1000kit-quarkus-jpa
+# tkit-quarkus-jpa
 
-1000kit quarkus JPA extension
+tkit quarkus JPA extension
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-green?style=for-the-badge&logo=apache)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Maven Central](https://img.shields.io/maven-central/v/org.1000kit.quarkus/1000kit-quarkus-jpa?logo=java&style=for-the-badge)](https://maven-badges.herokuapp.com/maven-central/org.1000kit.quarkus/1000kit-quarkus-jpa)
+[![Maven Central](https://img.shields.io/maven-central/v/org.tkit.quarkus/tkit-quarkus-jpa?logo=java&style=for-the-badge)](https://maven-badges.herokuapp.com/maven-central/org.tkit.quarkus/tkit-quarkus-jpa)
 
 
 ### Create a release

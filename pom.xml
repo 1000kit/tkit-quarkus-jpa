@@ -4,14 +4,14 @@
 
     <modelVersion>4.0.0</modelVersion>
     
-    <groupId>org.1000kit.quarkus</groupId>
-    <artifactId>1000kit-quarkus-jpa-parent</artifactId>
+    <groupId>org.tkit.quarkus</groupId>
+    <artifactId>tkit-quarkus-jpa-parent</artifactId>
     <version>0.3.0-SNAPSHOT</version>
-    <name>1000kit-quarkus-jpa-parent</name>
+    <name>tkit-quarkus-jpa-parent</name>
     <packaging>pom</packaging>
 
-    <description>1000kit JPA Quarkus extension</description>
-    <url>https://gitlab.com/1000kit/quarkus/1000kit-quarkus-jpa</url>
+    <description>tkit JPA Quarkus extension</description>
+    <url>https://gitlab.com/1000kit/quarkus/tkit-quarkus-jpa</url>
 
     <licenses>
         <license>
@@ -22,14 +22,14 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://gitlab.com/1000kit/quarkus/1000kit-quarkus-jpa.git</connection>
-        <developerConnection>scm:git:git@gitlab.com:1000kit/quarkus/1000kit-quarkus-jpa.git</developerConnection>
-        <url>https://gitlab.com/1000kit/quarkus/1000kit-quarkus-jpa</url>
+        <connection>scm:git:https://gitlab.com/1000kit/quarkus/tkit-quarkus-jpa.git</connection>
+        <developerConnection>scm:git:git@gitlab.com:1000kit/quarkus/tkit-quarkus-jpa.git</developerConnection>
+        <url>https://gitlab.com/1000kit/quarkus/tkit-quarkus-jpa</url>
     </scm>
 
     <organization>
-        <name>1000kit</name>
-        <url>http://www.1000kit.org</url>
+        <name>tkit</name>
+        <url>http://www.tkit.org</url>
     </organization>
 
     <developers>
