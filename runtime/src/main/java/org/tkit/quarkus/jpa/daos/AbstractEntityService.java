@@ -122,8 +122,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @throws ServiceException if the method fails.
      */
     @SuppressWarnings("unchecked")
-	@Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
-    public List<T> findAll() throws ServiceException {
+    protected List<T> findAll() throws ServiceException {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<T> cq = cb.createQuery(entityClass);
@@ -229,6 +228,62 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
             }
         }
         return entities;
+    }
+    /**
+     * Save an entity. This Methods checks if the entity already exists. So
+     * either the EM methods persist or merge are called with this entity. If
+     * you intend to save large number of entities, e.g. in a loop, prefer one
+     * of the {@link EntityManager#persist(java.lang.Object)} or {@link EntityManager#merge(java.lang.Object)} methods. This method will
+     * always result in at least 2 sql trips.
+     *
+     * @param entity to save
+     * @return saved entity
+     * @throws ServiceException if the method fails.
+     */
+     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = ServiceException.class)
+     public T save(T entity) throws ServiceException {
+        if (entity != null) {
+            try {
+                T loaded = null;
+                if (entity.getGuid() != null) {
+                    loaded = this.findByGuid(entity.getGuid());
+                }
+                if (loaded != null) {
+                    return this.update(entity);
+                }
+                return this.create(entity);
+            } catch (Exception e) {
+                throw new ServiceException(Errors.FAILED_TO_SAVE_ENTITY, e, entityName);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Saves a list of entities.
+     *
+     * @param entitys the list of entities.
+     * @return the list of saved entities.
+     *
+     * @throws ServiceException is the method fails.
+     *
+     * @see AbstractEntityService#save(AbstractPersistent) 
+     */
+    @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = ServiceException.class)
+    public List<T> saveAll(List<T> entitys) throws ServiceException {
+        List<T> result = null;
+        try {
+            if (entitys != null) {
+                result = new ArrayList<T>(entitys.size());
+                int size = entitys.size();
+                for (int i = 0; i < size; i++) {
+                    result.add(this.save(entitys.get(i)));
+                }
+            }
+        } catch (Exception e) {
+            throw new ServiceException(Errors.FAILED_TO_SAVE_ENTITY, e, entityName);
+        }
+        return result;
     }
 
     /**
@@ -801,6 +856,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
         DELETE_ENTITIES_FAILED,
         FIND_ENTITY_BY_ID_FAILED,
         FIND_ALL_ENTITIES_FAILED,
+        FAILED_TO_SAVE_ENTITY,
         ;
     }
 }
