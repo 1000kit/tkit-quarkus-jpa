@@ -15,11 +15,12 @@
  */
 package org.tkit.quarkus.jpa.daos;
 
-import org.tkit.quarkus.jpa.exception.ConstraintException;
-import org.tkit.quarkus.jpa.exception.ServiceException;
-import org.tkit.quarkus.jpa.model.AbstractPersistent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tkit.quarkus.jpa.exception.ConstraintException;
+import org.tkit.quarkus.jpa.exception.ServiceException;
+import org.tkit.quarkus.jpa.model.AbstractBusinessTraceablePersistent_;
+import org.tkit.quarkus.jpa.model.AbstractPersistent;
 import org.tkit.quarkus.jpa.model.AbstractPersistent_;
 
 import javax.annotation.PostConstruct;
@@ -239,7 +240,10 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @param entity to save
      * @return saved entity
      * @throws ServiceException if the method fails.
+     *
+     * Use the @see #update(AbstractPersistent) or {@link #create(AbstractPersistent)}
      */
+     @Deprecated
      @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = ServiceException.class)
      public T save(T entity) throws ServiceException {
         if (entity != null) {
@@ -370,7 +374,7 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
      * @return the corresponding list of entities.
      * @throws ServiceException if the method fails.
      */
-    @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = ServiceException.class)
+    @Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
     public List<T> findByGuid(List<String> guids) throws ServiceException {
         List<T> result = null;
         if (guids != null && !guids.isEmpty()) {
@@ -671,6 +675,111 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
     }
 
     /**
+     * Find the entity by the business id.
+     *
+     * @param id       the set of id.
+     * @return the find entity.
+     * @throws ServiceException if the method fails.
+     */
+    @Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
+    public T findByBusinessId(Long id) throws ServiceException {
+        try {
+            CriteriaQuery<T> cq = criteriaQuery();
+            cq.where(cb.equal(cq.from(entityClass).get(AbstractBusinessTraceablePersistent_.BUSINESS_ID), id));
+            TypedQuery<T> query = getEntityManager().createQuery(cq);
+            return query.getSingleResult();
+        } catch (NoResultException ex) {
+            return null;
+        } catch (Exception e) {
+            throw new ServiceException(Errors.FIND_ENTITY_BY_BUSINESS_ID_FAILED, e, entityName, id);
+        }
+    }
+
+    /**
+     * Finds the list of object by business IDs.
+     *
+     * @param businessIds the set of business IDs.
+     * @return the corresponding list of entities.
+     * @throws ServiceException if the method fails.
+     */
+    @Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
+    public List<T> findByBusinessIds(List<Long> businessIds) throws ServiceException {
+        List<T> result = null;
+        if (businessIds != null && !businessIds.isEmpty()) {
+            try {
+                CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+                CriteriaQuery<T> cq = cb.createQuery(entityClass);
+                Root<T> root = cq.from(entityClass);
+                cq.distinct(true);
+                cq.where(root.get(AbstractBusinessTraceablePersistent_.BUSINESS_ID).in(businessIds));
+                TypedQuery<T> query = getEntityManager().createQuery(cq);
+                result = query.getResultList();
+            } catch (Exception e) {
+                throw new ServiceException(Errors.FAILED_TO_FIND_ENTITY_BY_BUSINESS_IDS, e, entityName);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Loads the entity by business ID.
+     *
+     * @param businessId the business ID.
+     * @return the entity.
+     * @throws ServiceException if the method fails.
+     */
+    @Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
+    public T loadByBusinessId(Long businessId) throws ServiceException {
+        return loadByBusinessId(businessId, loadEntityGraph);
+    }
+
+
+    /**
+     * Loads the entity by business ID and entity graph name.
+     *
+     * @param businessId the business ID.
+     * @param entityGraphName the entity graph name.
+     * @return the entity.
+     * @throws ServiceException if the method fails.
+     */
+    @Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
+    public T loadByBusinessId(Long businessId, String entityGraphName) throws ServiceException {
+        if (entityGraphName != null && !entityGraphName.isEmpty()) {
+            return loadByBusinessId(businessId, getEntityManager().getEntityGraph(entityGraphName));
+        }
+        return null;
+    }
+
+    /**
+     * Loads the entity by business ID and entity graph name.
+     *
+     * @param businessId the business ID.
+     * @param entityGraph the entity graph name.
+     * @return the entity.
+     * @throws ServiceException if the method fails.
+     */
+    @Transactional(value = Transactional.TxType.SUPPORTS, rollbackOn = ServiceException.class)
+    public T loadByBusinessId(Long businessId, EntityGraph<?> entityGraph) throws ServiceException {
+        T result = null;
+        if ( businessId != null && entityGraph != null) {
+            try {
+                CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+                CriteriaQuery<T> cq = cb.createQuery(entityClass);
+                Root<T> root = cq.from(entityClass);
+                cq.where(cb.equal(root.get(AbstractBusinessTraceablePersistent_.BUSINESS_ID), businessId));
+                TypedQuery<T> query = getEntityManager().createQuery(cq);
+                query.setHint(HINT_LOAD_GRAPH, entityGraph);
+                result = query.getSingleResult();
+            } catch (NoResultException e) {
+                result = null;
+            } catch (Exception ex) {
+                throw new ServiceException(Errors.FAILED_TO_LOAD_ENTITY_BY_BUSINESS_ID, ex, entityName, businessId);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Creates the create criteria query.
      * @return the criteria query.
      */
@@ -857,6 +966,9 @@ public abstract class AbstractEntityService<T extends AbstractPersistent> implem
         FIND_ENTITY_BY_ID_FAILED,
         FIND_ALL_ENTITIES_FAILED,
         FAILED_TO_SAVE_ENTITY,
+        FIND_ENTITY_BY_BUSINESS_ID_FAILED,
+        FAILED_TO_FIND_ENTITY_BY_BUSINESS_IDS,
+        FAILED_TO_LOAD_ENTITY_BY_BUSINESS_ID,
         ;
     }
 }
