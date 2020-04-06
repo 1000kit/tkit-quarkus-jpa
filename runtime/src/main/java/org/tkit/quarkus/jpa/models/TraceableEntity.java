@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.tkit.quarkus.jpa.model;
+package org.tkit.quarkus.jpa.models;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -27,7 +27,7 @@ import javax.persistence.MappedSuperclass;
  *
  */
 @MappedSuperclass
-public class PersistentStringGuid extends AbstractPersistent {
+public class TraceableEntity extends AbstractTraceableEntity<String> {
 
     /**
      * The UID for this class.
@@ -39,22 +39,22 @@ public class PersistentStringGuid extends AbstractPersistent {
      */
     @Id
     @Column(name = "GUID")
-    private String guid = UUID.randomUUID().toString();
+    private String id = UUID.randomUUID().toString();
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public String getGuid() {
-        return guid;
+    public String getId() {
+        return id;
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public void setGuid(String guid) {
-        this.guid = guid;
+    public void setId(String id) {
+        this.id = id;
     }
 
     /**
@@ -73,9 +73,9 @@ public class PersistentStringGuid extends AbstractPersistent {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        PersistentStringGuid other = (PersistentStringGuid) obj;
-        Object guid = getGuid();
-        Object otherGuid = other.getGuid();
+        TraceableEntity other = (TraceableEntity) obj;
+        Object guid = getId();
+        Object otherGuid = other.getId();
 
         if (guid == null) {
             if (otherGuid != null) {
@@ -99,7 +99,7 @@ public class PersistentStringGuid extends AbstractPersistent {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + Objects.hashCode(getGuid());
+        result = prime * result + Objects.hashCode(getId());
         return result;
     }
 }

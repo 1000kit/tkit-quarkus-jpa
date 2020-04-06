@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.tkit.quarkus.jpa.exception;
+package org.tkit.quarkus.jpa.exceptions;
 
 import java.io.Serializable;
 
 /**
  * The constraint exception.
  */
-public class ConstraintException extends ServiceException {
+public class ConstraintException extends DAOException {
 
     /**
      * The constraints parameter key.
