@@ -16,15 +16,20 @@
 
 package org.tkit.quarkus.jpa.deployment;
 
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.hibernate.orm.deployment.HibernateEnhancersRegisteredBuildItem;
 import org.jboss.jandex.*;
-import org.tkit.quarkus.jpa.daos.AbstractEntityService;
+import org.tkit.quarkus.jpa.daos.AbstractDAO;
 
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import java.util.List;
+
 
 /**
  * The JPA build extension.
@@ -39,12 +44,14 @@ public class JPABuild {
     /**
      * The abstract entity service class.
      */
-    private static final DotName DOT_NAME_REPOSITORY = DotName.createSimple(AbstractEntityService.class.getName());
+    private static final DotName DOT_NAME_REPOSITORY = DotName.createSimple(AbstractDAO.class.getName());
 
     /**
      * The entity class.
      */
-    private static final DotName ENTITY = DotName.createSimple("javax.persistence.Entity");
+    private static final DotName ENTITY = DotName.createSimple(Entity.class.getName());
+
+    private static final DotName DOT_NAME_ENTITY_MANAGER = DotName.createSimple(EntityManager.class.getName());
 
     /**
      * The name of the entity annotation attribute name.
@@ -61,21 +68,26 @@ public class JPABuild {
         return new FeatureBuildItem(FEATURE_NAME);
     }
 
+    @BuildStep
+    UnremovableBeanBuildItem ensureBeanLookupAvailable() {
+        return new UnremovableBeanBuildItem(new UnremovableBeanBuildItem.BeanTypeExclusion(DOT_NAME_ENTITY_MANAGER));
+    }
+
     /**
      * Update entity dao services to have entity class name and entity name.
      *
      * @param index        the index.
      * @param transformers the transformer
-     * @throws Exception if the method fails.
      */
     @BuildStep
-    void build(CombinedIndexBuildItem index, BuildProducer<BytecodeTransformerBuildItem> transformers) throws Exception {
+    void build(CombinedIndexBuildItem index,
+               HibernateEnhancersRegisteredBuildItem hibernateMarker,
+               BuildProducer<BytecodeTransformerBuildItem> transformers) {
 
         for (ClassInfo classInfo : index.getIndex().getAllKnownSubclasses(DOT_NAME_REPOSITORY)) {
             if (classInfo.superClassType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
                 Type entity = classInfo.superClassType().asParameterizedType().arguments().get(0);
                 ClassInfo ec = index.getIndex().getClassByName(entity.name());
-
                 String name = entity.name().withoutPackagePrefix();
 
                 if (ec.annotations() != null) {

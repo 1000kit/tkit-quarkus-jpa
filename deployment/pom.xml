@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.tkit.quarkus</groupId>
         <artifactId>tkit-quarkus-jpa-parent</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -16,8 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-core-deployment</artifactId>
-            <scope>provided</scope>
+            <artifactId>quarkus-hibernate-orm-deployment</artifactId>
         </dependency>
         <dependency>
             <groupId>org.tkit.quarkus</groupId>
