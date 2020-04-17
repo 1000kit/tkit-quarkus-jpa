@@ -26,6 +26,9 @@ public class UserDAOTest {
     @Inject
     UserDAO userDAO;
 
+    @Inject
+    AddressDAO addressDAO;
+
     @Test
     public void userPagingTest() {
         // create 150 users
@@ -46,10 +49,16 @@ public class UserDAOTest {
     @Test
     public void userPagingCriteriaTest() {
         // create 100 users
-        userDAO.create(UserTestBuilder.createIndexUsers(100));
+        Address address = new Address();
+        address.setCity("Bratislava");
+        address = addressDAO.create(address);
+
+        userDAO.create(UserTestBuilder.createIndexUsers(100, address));
 
         UserSearchCriteria criteria = new UserSearchCriteria();
         criteria.setName("Name_1");
+        criteria.setEmail("Email_");
+        criteria.setCity("Bratislava");
         PagedQuery<User> pages = userDAO.pageUsers(criteria, Page.of(0, 10));
 
         PageResult<User> page = pages.getPageResult();
@@ -93,10 +102,12 @@ public class UserDAOTest {
             return user;
         }
 
-        public static Stream<User> createIndexUsers(int count) {
+        public static Stream<User> createIndexUsers(int count, Address address) {
             List<User> tmp = new ArrayList<>();
             for (int i=0; i<100; i++) {
-                tmp.add(createIndexUser(i));
+                User u = createIndexUser(i);
+                u.setAddress(address);
+                tmp.add(u);
             }
             return tmp.stream();
         }

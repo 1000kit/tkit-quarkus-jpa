@@ -7,6 +7,8 @@ import org.tkit.quarkus.jpa.daos.PagedQuery;
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
@@ -32,7 +34,13 @@ public class UserDAO extends AbstractDAO<User> {
             if (criteria.getName() != null && !criteria.getName().isEmpty()) {
                 predicates.add(cb.like(root.get(User_.NAME), criteria.getName() + "%"));
             }
-
+            if (criteria.getEmail() != null && !criteria.getEmail().isEmpty()) {
+                predicates.add(cb.like(root.get(User_.EMAIL), criteria.getEmail() + "%"));
+            }
+            if (criteria.getCity() != null && !criteria.getCity().isEmpty()) {
+                Join<User, Address> addressJoin = root.join(User_.ADDRESS, JoinType.LEFT);
+                predicates.add(cb.equal(addressJoin.get(Address_.CITY), criteria.getCity()));
+            }
             if (!predicates.isEmpty()) {
                 cq.where(predicates.toArray(new Predicate[0]));
             }

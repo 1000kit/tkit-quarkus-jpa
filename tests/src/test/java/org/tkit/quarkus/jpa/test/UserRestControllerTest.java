@@ -93,4 +93,31 @@ public class UserRestControllerTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
     }
+
+    @Test
+    public void pageSearchTest() {
+        User user = new User();
+        user.setEmail("email100");
+        user.setName("PageRestName100");
+
+        User tmp = given()
+                .contentType(ContentType.JSON)
+                .body(user)
+                .post("users")
+                .prettyPeek()
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract().body().as(User.class);
+
+        given()
+                .contentType(ContentType.JSON)
+                .queryParam("name", "email")
+                .queryParam("email", "PageRest")
+                .queryParam("index", 1)
+                .queryParam("size", 10)
+                .get("users/search")
+                .prettyPeek()
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode());
+    }
 }
