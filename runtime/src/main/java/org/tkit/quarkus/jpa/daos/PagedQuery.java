@@ -155,11 +155,13 @@ public class PagedQuery<T> {
     public static CriteriaQuery<Long> createCountCriteriaQuery(CriteriaBuilder builder, CriteriaQuery<?> from, boolean fetches) {
         CriteriaQuery<Long> result = builder.createQuery(Long.class);
 
+        AliasCounter counter = new AliasCounter();
+
         // copy the roots and they joins and fetches
         from.getRoots().forEach(root -> {
             Root<?> dest = result.from(root.getJavaType());
-            dest.alias(createAlias(root));
-            copyJoins(root, dest);
+            dest.alias(createAlias(root, counter));
+            copyJoins(root, dest, counter);
             if (fetches) {
                 copyFetches(root, dest);
             }
@@ -207,11 +209,11 @@ public class PagedQuery<T> {
      * @param from source Join
      * @param to   destination Join
      */
-    public static void copyJoins(From<?, ?> from, From<?, ?> to) {
+    public static void copyJoins(From<?, ?> from, From<?, ?> to, AliasCounter counter) {
         from.getJoins().forEach(join -> {
             Join<?, ?> item = to.join(join.getAttribute().getName(), join.getJoinType());
-            item.alias(createAlias(join));
-            copyJoins(join, item);
+            item.alias(createAlias(join, counter));
+            copyJoins(join, item, counter);
         });
     }
 
@@ -247,14 +249,25 @@ public class PagedQuery<T> {
      * @param selection the selection
      * @return root alias or generated one
      */
-    public static <T> String createAlias(Selection<T> selection) {
+    public static <T> String createAlias(Selection<T> selection, AliasCounter counter) {
         String alias = selection.getAlias();
         if (alias == null) {
-            alias = "Alias_" + 1;
+            alias = counter.next();
             selection.alias(alias);
         }
         return alias;
 
     }
 
+    /**
+     * Criteria query alias copy counter.
+     */
+    public static class AliasCounter {
+
+        private long index = 0;
+
+        public String next() {
+            return "a_" + index++;
+        }
+    }
 }

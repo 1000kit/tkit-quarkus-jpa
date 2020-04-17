@@ -4,6 +4,7 @@ import org.tkit.quarkus.jpa.daos.Page;
 import org.tkit.quarkus.jpa.daos.PageResult;
 
 import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -22,6 +23,16 @@ public class UserRestController {
 
     @Inject
     UserDAO userDAO;
+
+    @GET
+    @Path("search")
+    public Response page(@BeanParam UserSearchCriteriaDTO dto) {
+
+        UserSearchCriteria criteria = new UserSearchCriteria();
+        criteria.setName(dto.name);
+        criteria.setEmail(dto.email);
+        return Response.ok(userDAO.pageUsers(criteria, Page.of(dto.index, dto.size)).getPageResult()).build();
+    }
 
     @GET
     @Path("page/{index}/{size}")
