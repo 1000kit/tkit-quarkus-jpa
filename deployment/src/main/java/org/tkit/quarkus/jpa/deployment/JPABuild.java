@@ -22,12 +22,16 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.pkg.steps.NativeBuild;
 import io.quarkus.hibernate.orm.deployment.HibernateEnhancersRegisteredBuildItem;
 import org.jboss.jandex.*;
 import org.tkit.quarkus.jpa.daos.AbstractDAO;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.StaticMetamodel;
+import java.util.Collection;
 import java.util.List;
 
 
@@ -105,8 +109,19 @@ public class JPABuild {
                 transformers.produce(new BytecodeTransformerBuildItem(classInfo.name().toString(), new EntityServiceBuilderEnhancer(name, entity.name().toString())));
             }
         }
-
     }
 
+    @BuildStep(onlyIf = NativeBuild.class)
+    public void test(CombinedIndexBuildItem index,
+                     BuildProducer<ReflectiveClassBuildItem> reflective,
+                     HibernateEnhancersRegisteredBuildItem hibernateMarker) {
+            Collection<AnnotationInstance> annos = index.getIndex().getAnnotations(DotName.createSimple(StaticMetamodel.class.getName()));
+            if (annos != null) {
+                String[] metamodelClasses = annos.stream().map(a -> a.target().asClass().toString()).toArray(String[]::new);
+                if (metamodelClasses.length > 0) {
+                    reflective.produce(new ReflectiveClassBuildItem(false, false, true, metamodelClasses));
+                }
+            }
+    }
 
 }
