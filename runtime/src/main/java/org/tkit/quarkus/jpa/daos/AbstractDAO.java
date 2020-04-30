@@ -68,7 +68,7 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
      * The entity manager.
      */
     @Inject
-    EntityManager em;
+    protected EntityManager em;
 
     /**
      * The entity class.
