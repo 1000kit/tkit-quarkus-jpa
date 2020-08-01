@@ -54,4 +54,12 @@ public class Page {
     public static Page of(int number, int size) {
         return new Page(number, size);
     }
+
+    @Override
+    public String toString() {
+        return "Page{" +
+                "n=" + number +
+                ",s=" + size +
+                '}';
+    }
 }

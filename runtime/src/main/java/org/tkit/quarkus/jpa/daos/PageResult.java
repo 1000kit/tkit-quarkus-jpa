@@ -100,9 +100,9 @@ public class PageResult<T> {
     @Override
     public String toString() {
         return "PageResult{" +
-                "count=" + totalElements +
-                ", number=" + number +
-                ", size=" + size +
+                "c=" + totalElements +
+                ",n=" + number +
+                ",s=" + size +
                 '}';
     }
 }
