@@ -270,4 +270,11 @@ public class PagedQuery<T> {
             return "a_" + index++;
         }
     }
+
+    @Override
+    public String toString() {
+        return "PagedQuery{" +
+                "page=" + page +
+                '}';
+    }
 }
