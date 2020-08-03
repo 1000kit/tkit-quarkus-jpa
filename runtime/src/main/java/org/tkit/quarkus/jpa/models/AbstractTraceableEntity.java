@@ -111,7 +111,7 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
             if (principal != null) {
                 setModificationUser(principal.getName());
             }
-            setCreationDate(new Date());
+            setModificationDate(new Date());
         }
     }
 
