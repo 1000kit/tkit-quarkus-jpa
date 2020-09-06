@@ -16,10 +16,12 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm</artifactId>
+            <version>${quarkus.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
+            <version>${quarkus.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
