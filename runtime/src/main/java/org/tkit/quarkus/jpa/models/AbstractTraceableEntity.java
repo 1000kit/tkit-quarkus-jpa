@@ -15,9 +15,14 @@
  */
 package org.tkit.quarkus.jpa.models;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import java.io.Serializable;
 import java.security.Principal;
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import javax.inject.Inject;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -26,8 +31,6 @@ import javax.persistence.PostPersist;
 import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
@@ -42,6 +45,12 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
      */
     private static final long serialVersionUID = -8041083748062531412L;
 
+    static final ZoneOffset ZONE_OFFSET = ZoneId.of(
+                ConfigProvider.getConfig()
+                        .getOptionalValue("quarkus.hibernate-orm.jdbc.timezone", String.class)
+                        .orElse(ZoneOffset.UTC.getId())
+    ).getRules().getOffset(Instant.now());
+
     /**
      * Optimistic lock version
      */
@@ -52,8 +61,7 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
     /**
      * The creation date.
      */
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date creationDate;
+    private LocalDateTime creationDate;
     /**
      * The creation user.
      */
@@ -61,8 +69,7 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
     /**
      * The modification date.
      */
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date modificationDate;
+    private LocalDateTime modificationDate;
     /**
      * The modification user.
      */
@@ -97,7 +104,7 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
                 setCreationUser(principal.getName());
                 setModificationUser(getCreationUser());
             }
-            setCreationDate(new Date());
+            setCreationDate(LocalDateTime.now(ZONE_OFFSET));
             setModificationDate(getCreationDate());
         }
     }
@@ -111,21 +118,21 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
             if (principal != null) {
                 setModificationUser(principal.getName());
             }
-            setModificationDate(new Date());
+            setModificationDate(LocalDateTime.now(ZONE_OFFSET));
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public Date getCreationDate() {
+    public LocalDateTime getCreationDate() {
         return creationDate;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void setCreationDate(Date creationDate) {
+    public void setCreationDate(LocalDateTime creationDate) {
         this.creationDate = creationDate;
     }
 
@@ -146,14 +153,14 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
     /**
      * {@inheritDoc}
      */
-    public Date getModificationDate() {
+    public LocalDateTime getModificationDate() {
         return modificationDate;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void setModificationDate(Date modificationDate) {
+    public void setModificationDate(LocalDateTime modificationDate) {
         this.modificationDate = modificationDate;
     }
 
