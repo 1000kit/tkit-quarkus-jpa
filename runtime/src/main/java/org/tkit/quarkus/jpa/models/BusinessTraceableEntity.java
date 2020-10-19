@@ -47,13 +47,18 @@ public class BusinessTraceableEntity extends AbstractTraceableEntity<Long> {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GEN_BUSINESS_ID")
     private Long id;
 
-
+    /**
+     * {@inheritDoc }
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * {@inheritDoc }
+     */
     public void setId(Long businessId) {
-        this.id = id;
+        this.id = businessId;
     }
 
     /**
