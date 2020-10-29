@@ -45,12 +45,6 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
      */
     private static final long serialVersionUID = -8041083748062531412L;
 
-    static final ZoneOffset ZONE_OFFSET = ZoneId.of(
-                ConfigProvider.getConfig()
-                        .getOptionalValue("quarkus.hibernate-orm.jdbc.timezone", String.class)
-                        .orElse(ZoneOffset.UTC.getId())
-    ).getRules().getOffset(Instant.now());
-
     /**
      * Optimistic lock version
      */
@@ -104,7 +98,7 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
                 setCreationUser(principal.getName());
                 setModificationUser(getCreationUser());
             }
-            setCreationDate(LocalDateTime.now(ZONE_OFFSET));
+            setCreationDate(LocalDateTime.now());
             setModificationDate(getCreationDate());
         }
     }
@@ -118,7 +112,7 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
             if (principal != null) {
                 setModificationUser(principal.getName());
             }
-            setModificationDate(LocalDateTime.now(ZONE_OFFSET));
+            setModificationDate(LocalDateTime.now());
         }
     }
 
