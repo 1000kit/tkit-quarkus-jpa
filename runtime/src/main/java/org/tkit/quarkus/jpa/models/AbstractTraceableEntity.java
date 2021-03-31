@@ -15,15 +15,11 @@
  */
 package org.tkit.quarkus.jpa.models;
 
-import org.eclipse.microprofile.config.ConfigProvider;
-
 import java.io.Serializable;
 import java.security.Principal;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import javax.inject.Inject;
+import javax.enterprise.inject.Instance;
+import javax.enterprise.inject.spi.CDI;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PostLoad;
@@ -82,20 +78,14 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
     private boolean controlTraceabilityManual = false;
 
     /**
-     * The principal
-     */
-    @Transient
-    @Inject
-    Principal principal;
-
-    /**
      * Marks the entity as created.
      */
     @PrePersist
     public void prePersist() {
         if (!isControlTraceabilityManual()) {
-            if (principal != null) {
-                setCreationUser(principal.getName());
+            Instance<Principal> principalInstance = CDI.current().select(Principal.class);
+            if (principalInstance.isResolvable()) {
+                setCreationUser(principalInstance.get().getName());
                 setModificationUser(getCreationUser());
             }
             setCreationDate(LocalDateTime.now());
@@ -109,8 +99,9 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
     @PreUpdate
     public void preUpdate() {
         if (!isControlTraceabilityManual()) {
-            if (principal != null) {
-                setModificationUser(principal.getName());
+            Instance<Principal> principalInstance = CDI.current().select(Principal.class);
+            if (principalInstance.isResolvable()) {
+                setModificationUser(principalInstance.get().getName());
             }
             setModificationDate(LocalDateTime.now());
         }
@@ -220,7 +211,7 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
 
     /**
      * The entity life-cycle method.
-     */    
+     */
     @PostLoad
     @PostUpdate
     @PostPersist
