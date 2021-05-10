@@ -24,7 +24,6 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.pkg.steps.NativeBuild;
-import io.quarkus.hibernate.orm.deployment.HibernateEnhancersRegisteredBuildItem;
 import org.jboss.jandex.*;
 import org.tkit.quarkus.jpa.daos.AbstractDAO;
 
@@ -85,7 +84,6 @@ public class JPABuild {
      */
     @BuildStep
     void build(CombinedIndexBuildItem index,
-               HibernateEnhancersRegisteredBuildItem hibernateMarker,
                BuildProducer<BytecodeTransformerBuildItem> transformers) {
 
         for (ClassInfo classInfo : index.getIndex().getAllKnownSubclasses(DOT_NAME_REPOSITORY)) {
@@ -113,8 +111,7 @@ public class JPABuild {
 
     @BuildStep(onlyIf = NativeBuild.class)
     public void test(CombinedIndexBuildItem index,
-                     BuildProducer<ReflectiveClassBuildItem> reflective,
-                     HibernateEnhancersRegisteredBuildItem hibernateMarker) {
+                     BuildProducer<ReflectiveClassBuildItem> reflective) {
             Collection<AnnotationInstance> annos = index.getIndex().getAnnotations(DotName.createSimple(StaticMetamodel.class.getName()));
             if (annos != null) {
                 String[] metamodelClasses = annos.stream().map(a -> a.target().asClass().toString()).toArray(String[]::new);
