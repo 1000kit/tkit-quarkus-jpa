@@ -28,7 +28,7 @@ import javax.persistence.MappedSuperclass;
  *
  */
 @MappedSuperclass
-public class AbstractBusinessTraceableEntity extends AbstractTraceableEntity<String> implements Serializable{
+public class AbstractBusinessTraceableEntity extends AbstractTraceableEntity<String> {
 
 
     
