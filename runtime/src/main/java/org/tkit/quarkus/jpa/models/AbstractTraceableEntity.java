@@ -15,25 +15,15 @@
  */
 package org.tkit.quarkus.jpa.models;
 
+import javax.persistence.*;
 import java.io.Serializable;
-import java.security.Principal;
 import java.time.LocalDateTime;
-import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.spi.CDI;
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PostLoad;
-import javax.persistence.PostPersist;
-import javax.persistence.PostUpdate;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Transient;
-import javax.persistence.Version;
 
 /**
  * The persistent entity interface.
  */
 @MappedSuperclass
+@EntityListeners(TraceableListener.class)
 public abstract class AbstractTraceableEntity<T> implements Serializable {
 
     /**
@@ -76,36 +66,6 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
      */
     @Transient
     private boolean controlTraceabilityManual = false;
-
-    /**
-     * Marks the entity as created.
-     */
-    @PrePersist
-    public void prePersist() {
-        if (!isControlTraceabilityManual()) {
-            Instance<Principal> principalInstance = CDI.current().select(Principal.class);
-            if (principalInstance.isResolvable()) {
-                setCreationUser(principalInstance.get().getName());
-                setModificationUser(getCreationUser());
-            }
-            setCreationDate(LocalDateTime.now());
-            setModificationDate(getCreationDate());
-        }
-    }
-
-    /**
-     * Marks the entity as changed.
-     */
-    @PreUpdate
-    public void preUpdate() {
-        if (!isControlTraceabilityManual()) {
-            Instance<Principal> principalInstance = CDI.current().select(Principal.class);
-            if (principalInstance.isResolvable()) {
-                setModificationUser(principalInstance.get().getName());
-            }
-            setModificationDate(LocalDateTime.now());
-        }
-    }
 
     /**
      * {@inheritDoc}
