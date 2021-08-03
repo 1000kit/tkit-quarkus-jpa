@@ -24,6 +24,11 @@
             <version>${quarkus.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.tkit.quarkus</groupId>
+            <artifactId>tkit-quarkus-log-cdi</artifactId>
+            <version>1.4.7</version>
+        </dependency>
+        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-jpamodelgen</artifactId>
             <!-- Exclude these dependencies, since they are banned -->
