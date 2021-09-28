@@ -34,6 +34,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.transaction.Transactional;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -254,12 +255,16 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = DAOException.class)
     public Stream<T> update(Stream<T> entities) throws DAOException {
         if (entities != null) {
-            try {
-                Stream<T> result = entities.map(getEntityManager()::merge);
-                getEntityManager().flush();
-                return result;
-            } catch (Exception e) {
-                throw handleConstraint(e, Errors.MERGE_ENTITY_FAILED);
+            Iterator<T> it = entities.iterator();
+            if (it.hasNext()) {
+                try {
+                    Stream.Builder<T> builder = Stream.builder();
+                    it.forEachRemaining(e -> builder.add(getEntityManager().merge(e)));
+                    getEntityManager().flush();
+                    return builder.build();
+                } catch (Exception e) {
+                    throw handleConstraint(e, Errors.MERGE_ENTITY_FAILED);
+                }
             }
         }
         return Stream.empty();
@@ -274,7 +279,7 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
      */
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = DAOException.class)
     public Stream<T> update(List<T> entities) throws DAOException {
-        if (entities != null) {
+        if (entities != null && !entities.isEmpty()) {
             return update(entities.stream());
         }
         return Stream.empty();
@@ -307,7 +312,7 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
      */
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = DAOException.class)
     public Stream<T> create(List<T> entities) throws DAOException {
-        if (entities != null) {
+        if (entities != null && !entities.isEmpty()) {
             return create(entities.stream());
         }
         return Stream.empty();
@@ -324,11 +329,19 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = DAOException.class)
     public Stream<T> create(Stream<T> entities) throws DAOException {
         if (entities != null) {
-            try {
-                entities.forEach(getEntityManager()::persist);
-                getEntityManager().flush();
-            } catch (Exception e) {
-                throw handleConstraint(e, Errors.PERSIST_ENTITY_FAILED);
+            Iterator<T> it = entities.iterator();
+            if (it.hasNext()) {
+                try {
+                    Stream.Builder<T> result = Stream.builder();
+                    it.forEachRemaining(e -> {
+                        getEntityManager().persist(e);
+                        result.add(e);
+                    });
+                    getEntityManager().flush();
+                    return result.build();
+                } catch (Exception e) {
+                    throw handleConstraint(e, Errors.PERSIST_ENTITY_FAILED);
+                }
             }
         }
         return Stream.empty();
@@ -373,9 +386,12 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
      */
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = DAOException.class)
     public void delete(Stream<T> entities) throws DAOException {
-        if (entities != null && entities.findAny().isPresent()) {
-            entities.forEach(getEntityManager()::remove);
-            getEntityManager().flush();
+        if (entities != null) {
+            Iterator<T> it = entities.iterator();
+            if (it.hasNext()) {
+                it.forEachRemaining(getEntityManager()::remove);
+                getEntityManager().flush();
+            }
         }
     }
 
