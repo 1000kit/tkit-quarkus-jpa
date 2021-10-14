@@ -1,18 +1,11 @@
 package org.tkit.quarkus.jpa.daos;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tkit.quarkus.jpa.exceptions.DAOException;
-import org.tkit.quarkus.jpa.models.AbstractTraceableEntity;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
+import javax.persistence.criteria.*;
 import java.util.stream.Stream;
 
 /**
@@ -21,7 +14,10 @@ import java.util.stream.Stream;
  * @param <T> the entity class.
  */
 public class PagedQuery<T> {
-
+    /**
+     * The logger for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(PagedQuery.class);
     /**
      * The entity manager.
      */
@@ -51,7 +47,7 @@ public class PagedQuery<T> {
      */
     public PagedQuery(EntityManager em, CriteriaQuery<T> criteria, Page page) {
         this.em = em;
-        this.criteria = criteria;
+        this.criteria = setDefaultSorting(em, criteria);
         this.page = page;
         this.countCriteria = createCountCriteria(em, criteria);
     }
@@ -73,6 +69,24 @@ public class PagedQuery<T> {
         }
     }
 
+    private static <T> CriteriaQuery<T> setDefaultSorting(EntityManager em, CriteriaQuery<T> criteria) {
+        Root<T> root = null;
+        try {
+            CriteriaBuilder builder = em.getCriteriaBuilder();
+            if (criteria.getOrderList().isEmpty()) {
+                log.warn("Paged query used without explicit orderBy. Ordering of results between pages not guaranteed. Please add an orderBy clause to your query.");
+                root = findRoot(criteria, criteria.getResultType());
+                if (root != null) {
+                    criteria.orderBy(builder.asc(root.get("id")));
+                    log.warn("Default sorting by id attribute is added.");
+                }
+            }
+        } catch (IllegalArgumentException ex) {
+            log.error("There is no id attribute for Root:{}", root);
+        }
+        return criteria;
+    }
+
     /**
      * Gets the current page.
      *
@@ -89,6 +103,15 @@ public class PagedQuery<T> {
      */
     public CriteriaQuery<Long> countCriteria() {
         return countCriteria;
+    }
+
+    /**
+     * Gets the search criteria.
+     *
+     * @return the search criteria.
+     */
+    public CriteriaQuery<T> criteria() {
+        return criteria;
     }
 
     /**

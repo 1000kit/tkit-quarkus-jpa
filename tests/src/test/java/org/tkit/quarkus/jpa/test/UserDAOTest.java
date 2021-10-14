@@ -1,9 +1,9 @@
 package org.tkit.quarkus.jpa.test;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.hibernate.query.criteria.internal.path.SingularAttributePath;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +13,7 @@ import org.tkit.quarkus.jpa.daos.PagedQuery;
 import org.tkit.quarkus.jpa.models.TraceableEntity;
 
 import javax.inject.Inject;
+import javax.persistence.criteria.Order;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,46 @@ public class UserDAOTest {
     AddressDAO addressDAO;
 
     private final String userIdForDeleting = "123456789";
+
+    @Test
+    public void user5000PagingTest() {
+        // create 5000 users
+        userDAO.create(Stream.generate(UserTestBuilder::createUser).limit(5000));
+        List<String> userIds = new ArrayList<>(5000);
+        for (int i = 0; i < 10; i++) {
+            PagedQuery<User> query = userDAO.pageUsers(Page.of(i, 500));
+            PageResult<User> page = query.getPageResult();
+            userIds.addAll(page.getStream().map(TraceableEntity::getId).collect(Collectors.toList()));
+        }
+        Assertions.assertEquals(5000, userIds.size());
+        Assertions.assertEquals(5000, userIds.stream().distinct().count());
+    }
+
+    @Test
+    public void userDefaultSortingPagingTest(){
+        // create 150 users
+        userDAO.create(Stream.generate(UserTestBuilder::createUser).limit(150));
+        PagedQuery<User> query = userDAO.pageUsers(Page.of(0, 10));
+        PageResult<User> page = query.getPageResult();
+        Assertions.assertEquals(1, query.criteria().getOrderList().size());
+        Order order = query.criteria().getOrderList().get(0);
+        SingularAttributePath expression = (SingularAttributePath) order.getExpression();
+        Assertions.assertEquals("id", expression.getAttribute().getName());
+        Assertions.assertEquals(10, page.getStream().map(TraceableEntity::getId).collect(Collectors.toList()).size());
+    }
+
+    @Test
+    public void userSortByNamePagingTest(){
+        // create 150 users
+        userDAO.create(Stream.generate(UserTestBuilder::createUser).limit(150));
+        PagedQuery<User> query = userDAO.pageUsersAndSortByName(Page.of(0, 10));
+        PageResult<User> page = query.getPageResult();
+        Assertions.assertEquals(1, query.criteria().getOrderList().size());
+        Order order = query.criteria().getOrderList().get(0);
+        SingularAttributePath expression = (SingularAttributePath) order.getExpression();
+        Assertions.assertEquals("name", expression.getAttribute().getName());
+        Assertions.assertEquals(10, page.getStream().map(TraceableEntity::getId).collect(Collectors.toList()).size());
+    }
 
     @Test
     public void userPagingTest() {
@@ -93,7 +134,7 @@ public class UserDAOTest {
 
     @Test
     @Transactional
-    public void deleteAllUsersTest(){
+    public void deleteAllUsersTest() {
         User user = UserTestBuilder.createUser();
         userDAO.create(user);
         User foundUser1 = userDAO.findById(user.getId());
@@ -104,7 +145,7 @@ public class UserDAOTest {
     }
 
     @Test
-    public void deleteByIdTest(){
+    public void deleteByIdTest() {
         User user = UserTestBuilder.createUser();
         user.setId(userIdForDeleting);
         userDAO.create(user);
@@ -114,10 +155,9 @@ public class UserDAOTest {
         Assertions.assertTrue(deleted);
     }
 
-
     @Test
     @Transactional
-    public void deleteEntityTest(){
+    public void deleteEntityTest() {
         User user = UserTestBuilder.createUser();
         userDAO.create(user);
         User foundUser1 = userDAO.findById(user.getId());
@@ -128,7 +168,7 @@ public class UserDAOTest {
     }
 
     @Test
-    public void updateEntitiesTest(){
+    public void updateEntitiesTest() {
         User user1 = UserTestBuilder.createUser();
         User user2 = UserTestBuilder.createUser();
         userDAO.create(user1);
@@ -145,14 +185,14 @@ public class UserDAOTest {
 
     public static class UserTestBuilder {
 
-        public static  User createUser() {
+        public static User createUser() {
             User user = new User();
             user.setName("Name_" + UUID.randomUUID().toString());
             user.setEmail("Email_" + UUID.randomUUID().toString());
             return user;
         }
 
-        public static  User createIndexUser(int index) {
+        public static User createIndexUser(int index) {
             User user = new User();
             user.setName("Name_" + index + "_" + UUID.randomUUID().toString());
             user.setEmail("Email_" + UUID.randomUUID().toString());
@@ -161,7 +201,7 @@ public class UserDAOTest {
 
         public static Stream<User> createIndexUsers(int count, Address address) {
             List<User> tmp = new ArrayList<>();
-            for (int i=0; i<100; i++) {
+            for (int i = 0; i < 100; i++) {
                 User u = createIndexUser(i);
                 u.setAddress(address);
                 tmp.add(u);
