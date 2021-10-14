@@ -23,6 +23,14 @@ public class UserDAO extends AbstractDAO<User> {
         return createPageQuery(cq, page);
     }
 
+    public PagedQuery<User> pageUsersAndSortByName(Page page) {
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<User> cq = criteriaQuery();
+        Root<User> root = cq.from(User.class);
+        cq.orderBy(cb.asc(root.get(User_.NAME)));
+        return createPageQuery(cq, page);
+    }
+
     public PagedQuery<User> pageUsers(UserSearchCriteria criteria, Page page) {
         CriteriaQuery<User> cq = criteriaQuery();
         Root<User> root = cq.from(User.class);

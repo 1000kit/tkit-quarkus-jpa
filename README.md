@@ -84,6 +84,9 @@ public PageResult<User> searchByCriteria(UserSearchCriteria criteria) {
     return createPageQuery(cq, Page.of(criteria.getPageNumber(), criteria.getPageSize())).getPageResult();
 }
 ```
+In version 2.8.0 default sorting by id attribute was added to avoid a problem with unpredictable data order for paging. 
+There could be a situation where some rows are selected from DB more than once, and some rows were skipped. 
+
 ## Release
 
 ### Create a release

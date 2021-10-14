@@ -1,3 +1,7 @@
+# 2.8.0
+
+ added default sorting by id and logger messages for PagedQuery.
+
 # 2.7.0
 
 fix create, update and delete for stream input parameter
