@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tkit-quarkus-jpa
+  description: JPA extension for Quarkus. Provides CRUD and base entities.
+spec:
+  type: library
+  lifecycle: production
+  owner: 1000kit
+  tags:
+    - java
+    - quarkus
+    - jpa
+    - hibernate
+    - extension
+    - lib
