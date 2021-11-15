@@ -10,9 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.tkit.quarkus.jpa.daos.Page;
 import org.tkit.quarkus.jpa.daos.PageResult;
 import org.tkit.quarkus.jpa.daos.PagedQuery;
+import org.tkit.quarkus.jpa.exceptions.DAOException;
 import org.tkit.quarkus.jpa.models.TraceableEntity;
 
 import javax.inject.Inject;
+import javax.persistence.OptimisticLockException;
 import javax.persistence.criteria.Order;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
@@ -25,7 +27,7 @@ import java.util.stream.Stream;
 @DisplayName("User DAO tests")
 public class UserDAOTest {
 
-    private static Logger log = LoggerFactory.getLogger(UserDAOTest.class);
+    private static final Logger log = LoggerFactory.getLogger(UserDAOTest.class);
 
     @Inject
     UserDAO userDAO;
@@ -33,7 +35,22 @@ public class UserDAOTest {
     @Inject
     AddressDAO addressDAO;
 
-    private final String userIdForDeleting = "123456789";
+    @Test
+    public void updateUserTest() {
+        User c = new User();
+        c.setEmail("Rest@Rest.Rest");
+        c.setName("RestName");
+        final User user = userDAO.create(c);
+
+        User loaded = userDAO.findById(user.getId());
+        loaded.setName("update-name");
+        userDAO.update(loaded);
+
+        user.setName("update-name");
+        Assertions.assertThrows(DAOException.class, () -> {
+            userDAO.update(user);
+        });
+    }
 
     @Test
     public void user5000PagingTest() {
@@ -41,7 +58,7 @@ public class UserDAOTest {
         userDAO.create(Stream.generate(UserTestBuilder::createUser).limit(5000));
         List<String> userIds = new ArrayList<>(5000);
         for (int i = 0; i < 10; i++) {
-            PagedQuery<User> query = userDAO.pageUsers(Page.of(i, 500));
+            PagedQuery<User> query = userDAO.createPageQuery(Page.of(i, 500));
             PageResult<User> page = query.getPageResult();
             userIds.addAll(page.getStream().map(TraceableEntity::getId).collect(Collectors.toList()));
         }
@@ -53,13 +70,13 @@ public class UserDAOTest {
     public void userDefaultSortingPagingTest(){
         // create 150 users
         userDAO.create(Stream.generate(UserTestBuilder::createUser).limit(150));
-        PagedQuery<User> query = userDAO.pageUsers(Page.of(0, 10));
+        PagedQuery<User> query = userDAO.createPageQuery(Page.of(0, 10));
         PageResult<User> page = query.getPageResult();
         Assertions.assertEquals(1, query.criteria().getOrderList().size());
         Order order = query.criteria().getOrderList().get(0);
-        SingularAttributePath expression = (SingularAttributePath) order.getExpression();
+        SingularAttributePath<?> expression = (SingularAttributePath<?>) order.getExpression();
         Assertions.assertEquals("id", expression.getAttribute().getName());
-        Assertions.assertEquals(10, page.getStream().map(TraceableEntity::getId).collect(Collectors.toList()).size());
+        Assertions.assertEquals(10, (int) page.getStream().map(TraceableEntity::getId).count());
     }
 
     @Test
@@ -70,9 +87,9 @@ public class UserDAOTest {
         PageResult<User> page = query.getPageResult();
         Assertions.assertEquals(1, query.criteria().getOrderList().size());
         Order order = query.criteria().getOrderList().get(0);
-        SingularAttributePath expression = (SingularAttributePath) order.getExpression();
+        SingularAttributePath<?> expression = (SingularAttributePath<?>) order.getExpression();
         Assertions.assertEquals("name", expression.getAttribute().getName());
-        Assertions.assertEquals(10, page.getStream().map(TraceableEntity::getId).collect(Collectors.toList()).size());
+        Assertions.assertEquals(10, (int) page.getStream().map(TraceableEntity::getId).count());
     }
 
     @Test
@@ -80,7 +97,7 @@ public class UserDAOTest {
         // create 150 users
         userDAO.create(Stream.generate(UserTestBuilder::createUser).limit(150));
 
-        PagedQuery<User> query = userDAO.pageUsers(Page.of(0, 10));
+        PagedQuery<User> query = userDAO.createPageQuery(Page.of(0, 10));
 
         PageResult<User> page = query.getPageResult();
         log.info("{}", page);
@@ -125,7 +142,7 @@ public class UserDAOTest {
         // create 150 users
         userDAO.create(Stream.generate(UserTestBuilder::createUser).limit(10));
 
-        PagedQuery<User> query = userDAO.pageUsers(Page.of(100, 100));
+        PagedQuery<User> query = userDAO.createPageQuery(Page.of(100, 100));
 
         PageResult<User> page = query.getPageResult();
         log.info("{}", page);
@@ -147,6 +164,7 @@ public class UserDAOTest {
     @Test
     public void deleteByIdTest() {
         User user = UserTestBuilder.createUser();
+        String userIdForDeleting = "123456789";
         user.setId(userIdForDeleting);
         userDAO.create(user);
         User foundUser1 = userDAO.findById(user.getId());
@@ -187,21 +205,21 @@ public class UserDAOTest {
 
         public static User createUser() {
             User user = new User();
-            user.setName("Name_" + UUID.randomUUID().toString());
-            user.setEmail("Email_" + UUID.randomUUID().toString());
+            user.setName("Name_" + UUID.randomUUID());
+            user.setEmail("Email_" + UUID.randomUUID());
             return user;
         }
 
         public static User createIndexUser(int index) {
             User user = new User();
-            user.setName("Name_" + index + "_" + UUID.randomUUID().toString());
-            user.setEmail("Email_" + UUID.randomUUID().toString());
+            user.setName("Name_" + index + "_" + UUID.randomUUID());
+            user.setEmail("Email_" + UUID.randomUUID());
             return user;
         }
 
         public static Stream<User> createIndexUsers(int count, Address address) {
             List<User> tmp = new ArrayList<>();
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < count; i++) {
                 User u = createIndexUser(i);
                 u.setAddress(address);
                 tmp.add(u);

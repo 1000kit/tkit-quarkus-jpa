@@ -1,0 +1,17 @@
+version: "2"
+
+networks:
+  test:
+
+services:
+  tkit-quarkus-jpa-db:
+    container_name: tkit-quarkus-jpa-db
+    image: postgres:12
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432:5432"
+    networks:
+      - test

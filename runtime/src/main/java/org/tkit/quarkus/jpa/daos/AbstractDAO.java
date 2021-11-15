@@ -44,7 +44,7 @@ import java.util.stream.Stream;
  *
  * @param <T> the entity class {@link AbstractTraceableEntity}.
  */
-public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implements EntityService {
+public abstract class AbstractDAO<T> extends EntityService<T> {
 
     /**
      * The logger for this class.
@@ -59,11 +59,6 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
      * FetchType.LAZY.
      */
     protected static final String HINT_LOAD_GRAPH = "javax.persistence.loadgraph";
-
-    /**
-     * The entity ID attribute.
-     */
-    private static final String ID = "id";
 
     /**
      * The entity manager.
@@ -82,15 +77,23 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
     protected String entityName;
 
     /**
+     * The entity name.
+     */
+    protected String idAttributeName = "id";
+
+    /**
      * Initialize the entity service bean.
      */
     @PostConstruct
-    @SuppressWarnings("unchecked")
     public void init() {
         String serviceClass = getClass().getName();
         entityClass = getEntityClass();
         entityName = getEntityName();
-        log.debug("Initialize the entity service {} for entity {}/{}", serviceClass, entityClass, entityName);
+        String tmp = getIdAttributeName();
+        if (tmp != null && !tmp.isEmpty()) {
+            idAttributeName = tmp;
+        }
+        log.info("Initialize the entity service {} for entity {}/{}/{}", serviceClass, entityClass, entityName, idAttributeName);
     }
 
     /**
@@ -110,7 +113,19 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
      * @return the new page query instance
      */
     public PagedQuery<T> createPageQuery(CriteriaQuery<T> query, Page page) {
-        return new PagedQuery<>(em, query, page);
+        return new PagedQuery<>(em, query, page, idAttributeName);
+    }
+
+    /**
+     * Creates the page query of the DAO {@code <T>} type.
+     *
+     * @param page  the page for the query
+     * @return the new page query instance
+     */
+    public PagedQuery<T> createPageQuery(Page page) {
+        CriteriaQuery<T> cq = criteriaQuery();
+        cq.from(entityClass);
+        return createPageQuery(cq, page);
     }
 
     /**
@@ -122,7 +137,7 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
      * @return the new page query instance
      */
     public <E> PagedQuery<E> createPageQueryCustom(CriteriaQuery<E> query, Page page) {
-        return new PagedQuery<>(em, query, page);
+        return new PagedQuery<>(em, query, page, idAttributeName);
     }
 
     /**
@@ -214,7 +229,7 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
         try {
             if (ids != null && !ids.isEmpty()) {
                 CriteriaQuery<T> cq = criteriaQuery();
-                cq.where(cq.from(entityClass).get(ID).in(ids));
+                cq.where(cq.from(entityClass).get(idAttributeName).in(ids));
                 TypedQuery<T> query = getEntityManager().createQuery(cq);
                 if (entityGraph != null) {
                     query.setHint(HINT_LOAD_GRAPH, entityGraph);
@@ -444,7 +459,7 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
                 CriteriaDelete<T> cq = deleteQuery();
                 cq.where(
                         getEntityManager().getCriteriaBuilder()
-                                .equal(cq.from(entityClass).get(ID), id)
+                                .equal(cq.from(entityClass).get(idAttributeName), id)
                 );
                 int count = getEntityManager().createQuery(cq).executeUpdate();
                 getEntityManager().flush();
@@ -468,7 +483,7 @@ public abstract class AbstractDAO<T extends AbstractTraceableEntity<?>> implemen
         try {
             if (ids != null && !ids.isEmpty()) {
                 CriteriaDelete<T> cq = deleteQuery();
-                cq.where(cq.from(entityClass).get(ID).in(ids));
+                cq.where(cq.from(entityClass).get(idAttributeName).in(ids));
                 int result = getEntityManager().createQuery(cq).executeUpdate();
                 getEntityManager().flush();
                 return result;

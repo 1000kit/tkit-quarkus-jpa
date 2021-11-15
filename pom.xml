@@ -57,7 +57,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <surefire-plugin.version>2.22.2</surefire-plugin.version>
-
+        <testcontainers.version>1.15.3</testcontainers.version>
         <!-- maven versions and settings -->
         <semver.release-plugin.version>0.7.0</semver.release-plugin.version>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -76,6 +76,21 @@
                 <scope>import</scope>
                 <type>pom</type>
                 <version>${quarkus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.tkit.quarkus</groupId>
+                <artifactId>tkit-quarkus-context</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${testcontainers.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -117,19 +132,6 @@
                             <configuration>
                                 <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
                             </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.jboss.jandex</groupId>
-                    <artifactId>jandex-maven-plugin</artifactId>
-                    <version>${jandex-plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>make-index</id>
-                            <goals>
-                                <goal>jandex</goal>
-                            </goals>
                         </execution>
                     </executions>
                 </plugin>

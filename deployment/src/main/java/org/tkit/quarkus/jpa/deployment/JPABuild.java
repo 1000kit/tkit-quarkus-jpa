@@ -22,15 +22,12 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
-import io.quarkus.deployment.pkg.steps.NativeBuild;
 import org.jboss.jandex.*;
 import org.tkit.quarkus.jpa.daos.AbstractDAO;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.StaticMetamodel;
-import java.util.Collection;
+import javax.persistence.Id;
 import java.util.List;
 
 
@@ -53,7 +50,7 @@ public class JPABuild {
      * The entity class.
      */
     private static final DotName ENTITY = DotName.createSimple(Entity.class.getName());
-
+    private static final DotName ID = DotName.createSimple(Id.class.getName());
     private static final DotName DOT_NAME_ENTITY_MANAGER = DotName.createSimple(EntityManager.class.getName());
 
     /**
@@ -86,10 +83,11 @@ public class JPABuild {
     void build(CombinedIndexBuildItem index,
                BuildProducer<BytecodeTransformerBuildItem> transformers) {
 
-        for (ClassInfo classInfo : index.getIndex().getAllKnownSubclasses(DOT_NAME_REPOSITORY)) {
+        IndexView view = index.getIndex();
+        for (ClassInfo classInfo : view.getAllKnownSubclasses(DOT_NAME_REPOSITORY)) {
             if (classInfo.superClassType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
                 Type entity = classInfo.superClassType().asParameterizedType().arguments().get(0);
-                ClassInfo ec = index.getIndex().getClassByName(entity.name());
+                ClassInfo ec = view.getClassByName(entity.name());
                 String name = entity.name().withoutPackagePrefix();
 
                 if (ec.annotations() != null) {
@@ -103,22 +101,22 @@ public class JPABuild {
                         }
                     }
                 }
-
-                transformers.produce(new BytecodeTransformerBuildItem(classInfo.name().toString(), new EntityServiceBuilderEnhancer(name, entity.name().toString())));
+                String idAttributeName = getIdAttributeName(view, ec);
+                transformers.produce(new BytecodeTransformerBuildItem(classInfo.name().toString(), new EntityServiceBuilderEnhancer(name, entity.name().toString(), idAttributeName)));
             }
         }
     }
 
-    @BuildStep(onlyIf = NativeBuild.class)
-    public void test(CombinedIndexBuildItem index,
-                     BuildProducer<ReflectiveClassBuildItem> reflective) {
-            Collection<AnnotationInstance> annos = index.getIndex().getAnnotations(DotName.createSimple(StaticMetamodel.class.getName()));
-            if (annos != null) {
-                String[] metamodelClasses = annos.stream().map(a -> a.target().asClass().toString()).toArray(String[]::new);
-                if (metamodelClasses.length > 0) {
-                    reflective.produce(new ReflectiveClassBuildItem(false, false, true, metamodelClasses));
-                }
+    private String getIdAttributeName(IndexView view, ClassInfo ec) {
+        for (FieldInfo f : ec.fields()) {
+            if (f.hasAnnotation(ID)) {
+                return f.name();
             }
+        }
+        if (ec.superName() != null) {
+            return getIdAttributeName(view, view.getClassByName(ec.superName()));
+        }
+        return "";
     }
 
 }

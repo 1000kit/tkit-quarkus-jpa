@@ -25,8 +25,7 @@
         </dependency>
         <dependency>
             <groupId>org.tkit.quarkus</groupId>
-            <artifactId>tkit-quarkus-log-cdi</artifactId>
-            <version>1.4.7</version>
+            <artifactId>tkit-quarkus-context</artifactId>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -67,10 +66,6 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jboss.jandex</groupId>
-                <artifactId>jandex-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

@@ -32,8 +32,11 @@ import java.util.Objects;
  *  {@literal @}SequenceGenerator(name = "GEN_TABLE_NAME", sequenceName = "SEQ_TABLE_NAME_BID", allocationSize = 1, initialValue = 1)
  * }
  * </pre>
-
+ *
+ *
+ * @deprecated use {@link TraceableEntity}
  */
+@Deprecated(forRemoval = true, since = "2.8.0")
 @MappedSuperclass
 public class BusinessTraceableEntity extends AbstractTraceableEntity<Long> {
 
@@ -48,14 +51,18 @@ public class BusinessTraceableEntity extends AbstractTraceableEntity<Long> {
     private Long id;
 
     /**
-     * {@inheritDoc }
+     * Gets the businessId.
+     *
+     * @return the businessId.
      */
     public Long getId() {
         return id;
     }
 
     /**
-     * {@inheritDoc }
+     * Sets the GUID.
+     *
+     * @param businessId the new GUID.
      */
     public void setId(Long businessId) {
         this.id = businessId;
@@ -87,11 +94,7 @@ public class BusinessTraceableEntity extends AbstractTraceableEntity<Long> {
             } else {
                 return super.equals(obj);
             }
-        } else if (!guid.equals(otherGuid)) {
-            return false;
-        }
-
-        return true;
+        } else return guid.equals(otherGuid);
     }
 
     /**
@@ -105,6 +108,15 @@ public class BusinessTraceableEntity extends AbstractTraceableEntity<Long> {
         int result = 1;
         result = prime * result + Objects.hashCode(getId());
         return result;
+    }
+
+    /**
+     * Overwrite the {@code toString} method for the logger.
+     * @return the className:ID
+     */
+    @Override
+    public String toString() {
+        return BusinessTraceableEntity.class.getSimpleName() + ":" + getId();
     }
 
 }

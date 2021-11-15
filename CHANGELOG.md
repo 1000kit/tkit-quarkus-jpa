@@ -1,6 +1,8 @@
 # 2.8.0
 
- added default sorting by id and logger messages for PagedQuery.
+deprecate `BusinessTraceableEntity` class
+switch to RequestDataContext from `tkit-quarkus-context`
+added default sorting by id and logger messages for PagedQuery.
 
 # 2.7.0
 

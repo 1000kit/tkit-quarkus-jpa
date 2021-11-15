@@ -9,7 +9,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "USER")
+@Table(name = "TEST_USER")
 public class User extends TraceableEntity {
 
     private String name;

@@ -37,13 +37,13 @@ public class UserRestController {
     @GET
     @Path("page/{index}/{size}")
     public Response page(@PathParam("index") int index, @PathParam("size") int size) {
-        return Response.ok(userDAO.pageUsers(Page.of(index, size)).getPageResult()).build();
+        return Response.ok(userDAO.createPageQuery(Page.of(index, size)).getPageResult()).build();
     }
 
     @GET
     @Path("pageHeader/{index}/{size}")
     public Response pageHeader(@PathParam("index") int index, @PathParam("size") int size) {
-        PageResult<User> result = userDAO.pageUsers(Page.of(index, size)).getPageResult();
+        PageResult<User> result = userDAO.createPageQuery(Page.of(index, size)).getPageResult();
 
         return Response
                 .ok(result.getStream())
