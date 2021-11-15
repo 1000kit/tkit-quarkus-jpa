@@ -18,13 +18,13 @@ package org.tkit.quarkus.jpa.daos;
 /**
  * The service interface to use in the build phase.
  */
-public interface EntityService {
+public abstract class EntityService<T> {
 
     /**
      * The entity class.
      * @return the entity class.
      */
-    default Class getEntityClass() {
+    protected Class<T> getEntityClass() {
         return null;
     }
 
@@ -32,7 +32,15 @@ public interface EntityService {
      * The entity name.
      * @return the entity name.
      */
-    default String getEntityName() {
+    protected String getEntityName() {
+        return null;
+    }
+
+    /**
+     * The entity id attribute name.
+     * @return the entity name.
+     */
+    protected String getIdAttributeName() {
         return null;
     }
 }

@@ -5,9 +5,11 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-green?style=for-the-badge&logo=apache)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Maven Central](https://img.shields.io/maven-central/v/org.tkit.quarkus/tkit-quarkus-jpa?logo=java&style=for-the-badge)](https://maven-badges.herokuapp.com/maven-central/org.tkit.quarkus/tkit-quarkus-jpa)
 
+> `RequestDataContext` object move to the `tkit-quarkus-context` library
+
 > The version 1.0.0+ contains new model and DAO. For old version please use
 > branch [0.7](https://gitlab.com/1000kit/libs/quarkus/tkit-quarkus-jpa/-/tree/0.7)
-
+ 
 ## Documentation
 
 Example project with this extension is in the [1000kit JPA guides](https://1000kit.gitlab.io/guides/docs/quarkus/quarkus-jpa-project/)
@@ -21,14 +23,26 @@ We have these abstract classes for `Entity`
 * `org.tkit.quarkus.jpa.models.TraceableEntity` - base `Entity` abstract class which implements 
 traceable fields `creationUser`,`creationDate`,`modificationDate` and `modificationUser`. The type of the `ID` field is `String`.
 The `ID` is generated when you create java instance with `UUID.randomUUID().toString()`
-* `org.tkit.quarkus.jpa.models.BusinessTraceableEntity` - this business entity class implements all traceable fields and the type
-of the `ID` is `Long`. For this entity we muss define the ID generator
-```java
-@Table(name = "TABLE_NAME", indexes = @Index(name = "TABLE_NAME_GUID_IDX", columnList = "GUID", unique = true))
-@SequenceGenerator(name = "GEN_TABLE_NAME", sequenceName = "SEQ_TABLE_NAME_BID", allocationSize = 1, initialValue = 1)
-```  
 
 In the project you need to extend `Entities` from one of these abstract classes.
+
+## Business ID
+
+For the `business ID` use corresponding pattern. The primary ID is `GUID` from the `TraceableEntity`.
+
+```java
+@Entity
+@Table(name = "BUSINESS_PROJECT")
+public class BusinessProject extends TraceableEntity {
+
+    @Generated(GenerationTime.INSERT)
+    @Column(name = "bid", columnDefinition = "SERIAL")
+    private Long bid;
+
+    public Long getBid() { return bid; }
+    public void setBid(Long bid) { this.bid = bid; }
+}
+```
 
 ## DAO
 

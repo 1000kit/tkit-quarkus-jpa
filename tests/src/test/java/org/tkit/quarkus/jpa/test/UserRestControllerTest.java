@@ -3,6 +3,7 @@ package org.tkit.quarkus.jpa.test;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
@@ -10,14 +11,13 @@ import javax.ws.rs.core.Response;
 import static io.restassured.RestAssured.given;
 
 @QuarkusTest
-public class UserRestControllerTest {
+public class UserRestControllerTest extends AbstractTest {
 
     @Test
     public void createUserTest() {
         given()
                 .pathParam("id", "1234")
                 .get("users/{id}")
-                .prettyPeek()
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
 
@@ -37,7 +37,6 @@ public class UserRestControllerTest {
                 .contentType(ContentType.JSON)
                 .pathParam("id", tmp.getId())
                 .get("users/{id}")
-                .prettyPeek()
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract().body().as(User.class);
@@ -52,7 +51,7 @@ public class UserRestControllerTest {
         user.setEmail("email");
         user.setName("PageRestName");
 
-        User tmp = given()
+        given()
                 .contentType(ContentType.JSON)
                 .body(user)
                 .post("users")
@@ -65,7 +64,6 @@ public class UserRestControllerTest {
                 .pathParam("index", 1)
                 .pathParam("size", 10)
                 .get("users/page/{index}/{size}")
-                .prettyPeek()
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
     }
@@ -89,7 +87,6 @@ public class UserRestControllerTest {
                 .pathParam("index", 1)
                 .pathParam("size", 10)
                 .get("users/pageHeader/{index}/{size}")
-                .prettyPeek()
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
     }
@@ -104,7 +101,6 @@ public class UserRestControllerTest {
                 .contentType(ContentType.JSON)
                 .body(user)
                 .post("users")
-                .prettyPeek()
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract().body().as(User.class);
@@ -116,7 +112,6 @@ public class UserRestControllerTest {
                 .queryParam("index", 1)
                 .queryParam("size", 10)
                 .get("users/search")
-                .prettyPeek()
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
     }

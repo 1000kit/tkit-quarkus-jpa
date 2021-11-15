@@ -17,11 +17,6 @@ import java.util.List;
 @ApplicationScoped
 public class UserDAO extends AbstractDAO<User> {
 
-    public PagedQuery<User> pageUsers(Page page) {
-        CriteriaQuery<User> cq = criteriaQuery();
-        cq.from(User.class);
-        return createPageQuery(cq, page);
-    }
 
     public PagedQuery<User> pageUsersAndSortByName(Page page) {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();

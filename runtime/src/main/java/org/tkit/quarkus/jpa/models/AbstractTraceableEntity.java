@@ -137,6 +137,7 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
         this.controlTraceabilityManual = controlTraceabilityManual;
     }
 
+
     /**
      * Gets the optimistic lock version.
      *
@@ -154,20 +155,6 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
     public void setVersion(Integer version) {
         this.version = version;
     }
-
-    /**
-     * Gets the GUID.
-     *
-     * @return the GUID.
-     */
-    public abstract T getId();
-
-    /**
-     * Sets the GUID.
-     *
-     * @param guid the new GUID.
-     */
-    public abstract void setId(T guid);
 
     /**
      * The entity life-cycle method.
@@ -197,12 +184,4 @@ public abstract class AbstractTraceableEntity<T> implements Serializable {
         this.persisted = persisted;
     }
 
-    /**
-     * Overwrite the {@code toString} method for the logger.
-     * @return the className:Id
-     */
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + ":" + getId();
-    }
 }

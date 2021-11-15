@@ -45,9 +45,9 @@ public class PagedQuery<T> {
      * @param criteria the search criteria
      * @param page     the start page.
      */
-    public PagedQuery(EntityManager em, CriteriaQuery<T> criteria, Page page) {
+    public PagedQuery(EntityManager em, CriteriaQuery<T> criteria, Page page, String idAttributeName) {
         this.em = em;
-        this.criteria = setDefaultSorting(em, criteria);
+        this.criteria = setDefaultSorting(em, criteria, idAttributeName);
         this.page = page;
         this.countCriteria = createCountCriteria(em, criteria);
     }
@@ -69,7 +69,7 @@ public class PagedQuery<T> {
         }
     }
 
-    private static <T> CriteriaQuery<T> setDefaultSorting(EntityManager em, CriteriaQuery<T> criteria) {
+    private static <T> CriteriaQuery<T> setDefaultSorting(EntityManager em, CriteriaQuery<T> criteria, String idAttributeName) {
         Root<T> root = null;
         try {
             CriteriaBuilder builder = em.getCriteriaBuilder();
@@ -77,8 +77,8 @@ public class PagedQuery<T> {
                 log.warn("Paged query used without explicit orderBy. Ordering of results between pages not guaranteed. Please add an orderBy clause to your query.");
                 root = findRoot(criteria, criteria.getResultType());
                 if (root != null) {
-                    criteria.orderBy(builder.asc(root.get("id")));
-                    log.warn("Default sorting by id attribute is added.");
+                    criteria.orderBy(builder.asc(root.get(idAttributeName)));
+                    log.warn("Default sorting by '{}' attribute is added.", idAttributeName);
                 }
             }
         } catch (IllegalArgumentException ex) {

@@ -24,11 +24,6 @@
             <artifactId>tkit-quarkus-jpa</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.tkit.quarkus</groupId>
-            <artifactId>tkit-quarkus-log-cdi-deployment</artifactId>
-            <version>1.4.7</version>
-        </dependency>
     </dependencies>
 
     <build>

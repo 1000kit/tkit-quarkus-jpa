@@ -42,17 +42,19 @@ public class TraceableEntity extends AbstractTraceableEntity<String> {
     private String id = UUID.randomUUID().toString();
 
     /**
-     * {@inheritDoc }
+     * Gets the GUID.
+     *
+     * @return the GUID.
      */
-    @Override
     public String getId() {
         return id;
     }
 
     /**
-     * {@inheritDoc }
+     * Sets the GUID.
+     *
+     * @param id the new GUID.
      */
-    @Override
     public void setId(String id) {
         this.id = id;
     }
@@ -83,11 +85,7 @@ public class TraceableEntity extends AbstractTraceableEntity<String> {
             } else {
                 return super.equals(obj);
             }
-        } else if (!guid.equals(otherGuid)) {
-            return false;
-        }
-
-        return true;
+        } else return guid.equals(otherGuid);
     }
 
     /**
@@ -101,5 +99,14 @@ public class TraceableEntity extends AbstractTraceableEntity<String> {
         int result = 1;
         result = prime * result + Objects.hashCode(getId());
         return result;
+    }
+
+    /**
+     * Overwrite the {@code toString} method for the logger.
+     * @return the className:ID
+     */
+    @Override
+    public String toString() {
+        return TraceableEntity.class.getSimpleName() + ":" + getId();
     }
 }

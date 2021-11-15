@@ -1,11 +1,10 @@
 package org.tkit.quarkus.jpa.models;
 
-import org.tkit.quarkus.log.cdi.context.RequestData;
-import org.tkit.quarkus.log.cdi.context.RequestDataContext;
+import org.tkit.quarkus.context.RequestData;
+import org.tkit.quarkus.context.RequestDataContext;
 
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.CDI;
-import javax.inject.Inject;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import java.io.Serializable;
@@ -23,7 +22,7 @@ public class TraceableListener implements Serializable {
      * @param entity the traceable persistent entity.
      */
     @PrePersist
-    public void prePersist(AbstractTraceableEntity entity) {
+    public void prePersist(AbstractTraceableEntity<?> entity) {
         if (!entity.isControlTraceabilityManual()) {
             String user = getPrincipal();
             if (user != null) {
@@ -42,7 +41,7 @@ public class TraceableListener implements Serializable {
      * @param entity the traceable persistent entity.
      */
     @PreUpdate
-    public void preUpdate(AbstractTraceableEntity entity) {
+    public void preUpdate(AbstractTraceableEntity<?> entity) {
         if (!entity.isControlTraceabilityManual()) {
             String user = getPrincipal();
             if (user != null) {

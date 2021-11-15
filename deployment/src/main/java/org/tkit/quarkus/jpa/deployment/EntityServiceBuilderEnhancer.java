@@ -38,14 +38,20 @@ public class EntityServiceBuilderEnhancer implements BiFunction<String, ClassVis
     private String entityName;
 
     /**
+     * The ID attribute name.
+     */
+    private String idAttributeName;
+
+    /**
      * The default constructor.
      *
      * @param entityName  entity name.
      * @param entityClass entity class.
      */
-    public EntityServiceBuilderEnhancer(String entityName, String entityClass) {
+    public EntityServiceBuilderEnhancer(String entityName, String entityClass, String idAttributeName) {
         this.entityClass = entityClass;
         this.entityName = entityName;
+        this.idAttributeName = idAttributeName;
     }
 
     /**
@@ -53,7 +59,7 @@ public class EntityServiceBuilderEnhancer implements BiFunction<String, ClassVis
      */
     @Override
     public ClassVisitor apply(String className, ClassVisitor outputClassVisitor) {
-        return new EntityServiceBuilderEnhancerClassVisitor(className, outputClassVisitor, entityName, entityClass);
+        return new EntityServiceBuilderEnhancerClassVisitor(className, outputClassVisitor, entityName, entityClass, idAttributeName);
     }
 
     /**
@@ -69,10 +75,16 @@ public class EntityServiceBuilderEnhancer implements BiFunction<String, ClassVis
          */
         private String entityName;
 
-        public EntityServiceBuilderEnhancerClassVisitor(String className, ClassVisitor outputClassVisitor, String entityName, String entityClass) {
+        /**
+         * The ID attribute name.
+         */
+        private String idAttributeName;
+
+        public EntityServiceBuilderEnhancerClassVisitor(String className, ClassVisitor outputClassVisitor, String entityName, String entityClass, String idAttributeName) {
             super(Opcodes.ASM7, outputClassVisitor);
             this.entityClass = entityClass.replace('.', '/');
             this.entityName = entityName;
+            this.idAttributeName = idAttributeName;
         }
 
         /**
@@ -81,7 +93,7 @@ public class EntityServiceBuilderEnhancer implements BiFunction<String, ClassVis
         @Override
         public void visitEnd() {
 
-            MethodVisitor mv1 = super.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE,
+            MethodVisitor mv1 = super.visitMethod(Opcodes.ACC_PROTECTED | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE,
                     "getEntityClass",
                     "()Ljava/lang/Class;",
                     null,
@@ -92,7 +104,7 @@ public class EntityServiceBuilderEnhancer implements BiFunction<String, ClassVis
             mv1.visitMaxs(0, 0);
             mv1.visitEnd();
 
-            MethodVisitor mv = super.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE,
+            MethodVisitor mv = super.visitMethod(Opcodes.ACC_PROTECTED | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE,
                     "getEntityName",
                     "()Ljava/lang/String;",
                     null,
@@ -103,6 +115,16 @@ public class EntityServiceBuilderEnhancer implements BiFunction<String, ClassVis
             mv.visitMaxs(0, 0);
             mv.visitEnd();
 
+            MethodVisitor ma = super.visitMethod(Opcodes.ACC_PROTECTED | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE,
+                    "getIdAttributeName",
+                    "()Ljava/lang/String;",
+                    null,
+                    null);
+            ma.visitCode();
+            ma.visitLdcInsn(idAttributeName);
+            ma.visitInsn(Opcodes.ARETURN);
+            ma.visitMaxs(0, 0);
+            ma.visitEnd();
             super.visitEnd();
         }
     }
