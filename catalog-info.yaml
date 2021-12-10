@@ -3,6 +3,8 @@ kind: Component
 metadata:
   name: tkit-quarkus-jpa
   description: JPA extension for Quarkus. Provides CRUD, pagination and base entities.
+  annotations:
+    gitlab.com/project-slug: 1000kit/libs/quarkus/tkit-quarkus-jpa
   tags:
     - java
     - quarkus
