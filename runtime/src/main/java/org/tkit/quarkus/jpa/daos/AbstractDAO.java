@@ -419,8 +419,11 @@ public abstract class AbstractDAO<T> extends EntityService<T> {
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = DAOException.class)
     public void deleteAll() throws DAOException {
         try {
-            Stream<T> tmp = findAll();
-            delete(tmp);
+            CriteriaQuery<T> cq = criteriaQuery();
+            cq.from(entityClass);
+            cq.distinct(true);
+            TypedQuery<T> query = getEntityManager().createQuery(cq);
+            delete(query.getResultStream());
         } catch (Exception e) {
             throw new DAOException(Errors.FAILED_TO_DELETE_ALL, e, entityName);
         }
@@ -435,7 +438,7 @@ public abstract class AbstractDAO<T> extends EntityService<T> {
     @Transactional(value = Transactional.TxType.REQUIRED, rollbackOn = DAOException.class)
     public int deleteQueryAll() throws DAOException {
         try {
-            CriteriaQuery<T> cq = criteriaQuery();
+            CriteriaDelete<T> cq = deleteQuery();
             cq.from(entityClass);
             int result = getEntityManager().createQuery(cq).executeUpdate();
             getEntityManager().flush();
