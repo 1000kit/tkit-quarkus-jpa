@@ -50,7 +50,7 @@
     </modules>
 
     <properties>
-        <quarkus.version>1.11.7.Final</quarkus.version>
+        <quarkus.version>1.13.7.Final</quarkus.version>
 
 
         <maven.compiler.source>11</maven.compiler.source>
