@@ -64,7 +64,7 @@
         <jandex-plugin.version>1.0.8</jandex-plugin.version>
         <nexus.staging-plugin.version>1.6.8</nexus.staging-plugin.version>
         <source-plugin.version>3.2.0</source-plugin.version>
-        <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
+        <javadoc-plugin.version>3.4.1</javadoc-plugin.version>
         <gpg-plugin.version>1.6</gpg-plugin.version>
     </properties>
 
