@@ -10,11 +10,11 @@ sections:
 template: |
   Plugin maven dependency:
   ```xml
-  <plugin>
+  <dependency>
       <groupId>org.tkit.quarkus</groupId>
       <artifactId>tkit-quarkus-jpa</artifactId>
       <version>{{ .Version }}</version>
-  </plugin>
+  </dependency>
   ```
   {{ range $section := .Sections }}{{ if $section.Items }}### {{ $section.GetTitle }}{{ range $item := $section.Items }}
   * [#{{ $item.GetID }}]({{ $item.GetURL }}) - {{ $item.GetTitle }}{{ end }}{{ end }}
